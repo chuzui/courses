@@ -20,7 +20,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QTime>
-
+#include <QMetaType>
 /**
  * Type: Node
  * -----------------------------------------------------------------------

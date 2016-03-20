@@ -11,7 +11,6 @@ public:
 	void set_char(vector<int> pos, char c);
 private:
 	vector<char> chars;
-
 };
 
 class RemainWords{

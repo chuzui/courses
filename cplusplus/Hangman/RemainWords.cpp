@@ -3,13 +3,22 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <iterator>
 using namespace std;
 
 void PositionChar::set_char(vector<int> pos, char c)
 {
 	for (int p: pos)
-		this->chars[p] = c;
+		chars[p] = c;
 }
+
+
+ostream& operator<<(ostream& os, const PositionChar& item)
+{
+	copy(item.chars.begin(), item.chars.end(), ostream_iterator<char>(os));
+	return os;
+}
+
 
 void RemainWords::guess(char c)
 {
@@ -34,15 +43,24 @@ void RemainWords::guess(char c)
 		pos_to_words[pos].push_back(word);
 	}
 
+
+	vector<int> max_pos;
 	for (auto& item : pos_to_words)
 	{
-		if (item.second.size() == 68)
+		if (item.second.size() > pos_to_words[max_pos].size())
 		{
-			for (auto& word: item.second)
-			{
-				cout << word << endl;
-			}
+			max_pos = item.first;
 		}
-		
 	}
+
+	// copy(max_pos.begin(), max_pos.end(), ostream_iterator<int>(cout));
+
+	words = pos_to_words[max_pos];
+	ps.set_char(max_pos, c);
+}
+
+ostream& operator<<(ostream& os, const RemainWords& item)
+{
+	os << item.ps << " " << item.words.size();
+	return os;
 }

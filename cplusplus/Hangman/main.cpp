@@ -18,12 +18,23 @@ int main()
 		length_to_words[word.size()].push_back(word);
 	}
 
+	dict_file.close();
+
 	int length = 8;
 
-	RemainWords rw(length_to_words[length]);
+	cout << length_to_words[length].size() << endl;
 
-	rw.guess('e');
+	RemainWords rw(length_to_words[length], length);
 
 
-	dict_file.close();
+	char guess_c;
+
+	while (cin >> guess_c)
+	{
+		rw.guess(guess_c);
+		cout << rw << endl;
+	}
+
+	
+	
 }

@@ -28,7 +28,7 @@ void RemainWords::guess(char c)
 		vector<int> pos;
 		int index = 0;
 
-		for_each(word.begin(), word.end(), [&pos, &c, &index](char iter_c){
+		for_each(word.begin(), word.end(), [&](char iter_c){
 			if (iter_c == c)
 			{
 				pos.push_back(index);	

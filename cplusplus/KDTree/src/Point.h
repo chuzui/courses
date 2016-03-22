@@ -10,6 +10,7 @@
 #define POINT_INCLUDED
 
 #include <cmath>
+#include <iostream>
 
 template <size_t N>
 class Point {
@@ -50,10 +51,14 @@ public:
     const_iterator begin() const;
     const_iterator end() const;
 
+    template <size_t M>
+    friend std::ostream& operator<<(std::ostream& os, Point<M> const& p);
+
 private:
     // The point's actual coordinates are stored in an array.
     double coords[N];
 };
+
 
 // double Distance(const Point<N>& one, const Point<N>& two);
 // Usage: double d = Distance(one, two);
@@ -76,6 +81,7 @@ bool operator!=(const Point<N>& one, const Point<N>& two);
 /** Point class implementation details */
 
 #include <algorithm>
+#include <iterator>
 
 template <size_t N>
 size_t Point<N>::size() const {
@@ -133,6 +139,13 @@ bool operator==(const Point<N>& one, const Point<N>& two) {
 template <size_t N>
 bool operator!=(const Point<N>& one, const Point<N>& two) {
     return !(one == two);
+}
+
+template <size_t M>
+std::ostream& operator<<(std::ostream& os, Point<M> const& p)
+{
+    std::copy(p.begin(), p.end(), std::ostream_iterator<double>(os));
+    return os;
 }
 
 #endif // POINT_INCLUDED

@@ -4,9 +4,9 @@ TEMPLATE = app
 CONFIG += no_include_pwd
 
 SOURCES += $$PWD/src/*.cpp
-SOURCES += $$PWD/lib/StanfordCPPLib/*.cpp
+SOURCES += ../lib/StanfordCPPLib/*.cpp
 
-HEADERS += $$PWD/lib/StanfordCPPLib/*.h
+HEADERS += ../lib/StanfordCPPLib/*.h
 
 # set up flags for the compiler and Stanford C++ libraries
 QMAKE_CXXFLAGS += -std=c++11 \
@@ -28,7 +28,7 @@ QMAKE_CXXFLAGS += -std=c++11 \
     -DSPL_CONSOLE_X=999999 \
     -DSPL_CONSOLE_Y=999999 \
 
-INCLUDEPATH += $$PWD/lib/StanfordCPPLib/
+INCLUDEPATH += ../lib/StanfordCPPLib/
 
 # Copies the given files to the destination directory
 # The rest of this file defines how to copy the resources folder
@@ -54,11 +54,11 @@ defineTest(copyToDestdir) {
 
 !win32 {
     copyToDestdir($$files($$PWD/res/*))
-    copyToDestdir($$files($$PWD/lib/*.jar))
+    copyToDestdir($$files(../lib/*.jar))
 }
 win32 {
     copyToDestdir($$PWD/res)
-    copyToDestdir($$PWD/lib/*.jar)
+    copyToDestdir(../lib/*.jar)
 }
 
 copyResources.input = $$files($$PWD/res/*)

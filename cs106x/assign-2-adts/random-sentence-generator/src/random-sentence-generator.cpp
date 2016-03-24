@@ -8,11 +8,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <map>
 using namespace std;
 
 #include "console.h"
 #include "simpio.h"   // for getLine
 #include "strlib.h"   // for toLowerCase, trim
+#include "random.h"
 
 static const string kGrammarsDirectory = "grammars/";
 static const string kGrammarFileExtension = ".g";
@@ -37,12 +40,65 @@ static string getFileName() {
     }
 }
 
+static void readGrammer(string filename, map<string, vector<string>>& nonTermMap)
+{
+    ifstream grammmFile(filename.c_str());
+
+    string nonTerm;
+   
+    while (!grammmFile.eof())
+    {
+        getLine(grammmFile, nonTerm);
+        // cout << nonTerm << endl;
+        if (nonTerm.empty())
+            continue;
+
+        nonTermMap[nonTerm] = vector<string>();
+
+        int num;
+        grammmFile >> num >> ws;
+
+        string def;
+        for (int i=0; i < num; ++i) 
+        {
+            getLine(grammmFile, def);
+            nonTermMap[nonTerm].push_back(def);
+        }
+    }
+}
+
+static string genSentence(map<string, vector<string>>& nonTermMap)
+{
+    string s = "<start>";
+
+    int ntermStart, ntermEnd;
+
+    while ((ntermStart = s.find('<')) != string::npos)
+    {
+        ntermEnd = s.find('>');
+
+        string nterm = s.substr(ntermStart, ntermEnd - ntermStart + 1);
+        int numTerm = nonTermMap[nterm].size();
+
+        int choice = randomInteger(0, numTerm - 1);
+        string replaceTerm = nonTermMap[nterm][choice];
+
+        s.replace(ntermStart, ntermEnd - ntermStart + 1, replaceTerm);
+    }
+
+    return s;
+}
+
 int main() {
     while (true) {
         string filename = getFileName();
         if (filename.empty()) break;
-        cout << "Here's where you read in the \"" << filename << "\" grammar "
-             << "and generate three random sentences." << endl;
+        
+        map<string, vector<string>> nonTermMap;
+        readGrammer(getNormalizedFilename(filename), nonTermMap);
+
+        for (int i=0; i < 3; ++i)
+            cout << genSentence(nonTermMap) << endl << endl ;
     }
     
     cout << "Thanks for playing!" << endl;

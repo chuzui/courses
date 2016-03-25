@@ -25,12 +25,36 @@ const static string kLeafColor = "#2e8b57";
 const static string kTrunkColor = "#8b7765";
 const static double kBranchProbability = 1.0;
 
+
+static void drawTree(GWindow& window, int order, GPoint startPoint, int startAngle, double len) {
+    if (order == 0)
+    {
+        window.setColor(kLeafColor);
+        window.drawPolarLine(startPoint, len, startAngle);
+    }
+    else
+    {
+        double nextLen = len * kShrinkFactor;
+
+        window.setColor(order < 2 ? kLeafColor : kTrunkColor);
+        GPoint trunkEnd = window.drawPolarLine(startPoint, len, startAngle);
+
+        for (int i = 0; i < 7; ++i)
+        {
+            if (randomReal(0.0, 1.0) < 0.8)
+            {
+                int angle = startAngle - 45 + i * kBranchAngleSeparation;
+            
+                drawTree(window, order - 1, trunkEnd, angle, nextLen);
+            }  
+        }
+    }
+}
+
 static void drawTree(GWindow& window, int order) {
     GPoint trunkBase(window.getWidth()/2, window.getHeight());
-    window.setColor(order < 2 ? kLeafColor : kTrunkColor);
-    window.drawPolarLine(trunkBase, kTrunkLength, kTrunkStartAngle);
-    // update this function to wrap around another version of drawTree, which
-    // recursively draws the tree of the specified order....
+    // GPoint trunkEnd(window.getWidth()/2, window.getHeight() - kTrunkLength);
+    drawTree(window, order, trunkBase, kTrunkStartAngle, kTrunkLength);
 }
 
 const static int kHighestOrder = 5;

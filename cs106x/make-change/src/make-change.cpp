@@ -12,11 +12,22 @@ using namespace std;
 #include "console.h"
 #include "vector.h"
 
+static int countWaysToMakeChange(const Vector<int>& denominations, int remain, int coin)
+{
+    if (remain == 0) return 1;
+    if (remain < 0) return 0;
+    if (coin >= denominations.size()) return 0;
+
+    return countWaysToMakeChange(denominations, remain - denominations[coin], coin) + 
+           countWaysToMakeChange(denominations, remain, coin + 1);
+
+}
+
 static int countWaysToMakeChange(const Vector<int>& denominations, int amount) {
     // replace with your own implementation, which will almost
     // certainly benefit from being implemented as a wrapper around the function
     // call that actually does the recursion.
-    return 0;
+    return countWaysToMakeChange(denominations, amount, 0);
 }
 
 int main() {

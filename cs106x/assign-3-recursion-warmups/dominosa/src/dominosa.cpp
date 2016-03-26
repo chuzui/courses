@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <set>
 using namespace std;
 
 #include "simpio.h"
@@ -30,6 +31,33 @@ static int getIntegerInRange(string prompt, int low, int high) {
 	}
 }
 
+struct pairNum
+{
+	int one;
+	int two;
+
+	pairNum(int first, int second)
+	{
+		if (first < second)
+		{
+			one = first;
+			two = second;
+		}
+		else
+		{
+			one = second;
+			two = first;
+		}
+	}
+};
+
+inline bool operator<(const pairNum& one, const pairNum& two) {
+    if (one.one != two.one)
+        return one.one < two.one;
+    else
+        return one.two < two.two;
+}
+
 static void populateBoard(Grid<int>& board, int low, int high) {
 	for (int row = 0; row < board.numRows(); row++) {
 		for (int col = 0; col < board.numCols(); col++) {
@@ -38,9 +66,80 @@ static void populateBoard(Grid<int>& board, int low, int high) {
 	}
 }
 
+static bool canSolveBoard(DominosaDisplay& display,
+	 					  Grid<int>& board, 
+	 					  set<pairNum>& pairNums, 
+	 					  int currCol
+	 					  )
+{
+	int col = board.width();
+
+	if (currCol == col) return true;
+	if (currCol < col - 1)
+	{
+		pairNum p1(board[0][currCol], board[0][currCol+1]);
+		pairNum p2(board[1][currCol], board[1][currCol+1]);
+		if (pairNums.find(p1) == pairNums.end() && pairNums.find(p2) == pairNums.end())
+		{
+			pairNums.insert(p1);
+			pairNums.insert(p2);
+
+			coord c11{0, currCol}, c12{0, currCol+1};
+			coord c21{1, currCol}, c22{1, currCol+1};
+			display.vetoProvisionalPairing(c11, c12);
+			display.vetoProvisionalPairing(c21, c22);
+
+			if (canSolveBoard(display, board, pairNums, currCol + 2))
+			{
+				return true;
+			}
+
+			display.eraseProvisionalPairing(c11, c12);
+			display.eraseProvisionalPairing(c21, c22);
+
+			pairNums.erase(p1);
+			pairNums.erase(p2);
+		}
+	}
+	
+
+	pairNum p(board[0][currCol], board[1][currCol]);
+	if (pairNums.find(p) == pairNums.end())
+	{
+		pairNums.insert(p);
+
+		coord c11{0, currCol}, c12{1, currCol};
+		display.vetoProvisionalPairing(c11, c12);
+
+		if (canSolveBoard(display, board, pairNums, currCol + 1))
+		{
+			return true;
+		}
+
+		display.eraseProvisionalPairing(c11, c12);
+
+		pairNums.erase(p);
+	}
+
+	return false;
+}
+
 static bool canSolveBoard(DominosaDisplay& display, Grid<int>& board) {
     // replace this with your own solution, which will almost certainly be a wrapper function
-	return false;
+
+    set<pairNum> pairNums;
+
+    bool isSolved = canSolveBoard(display, board, pairNums, 0);
+
+    // if (isSolved)	
+    // {
+    // 	for (auto& p: pairNums)
+    // 		cout << p.one << " " << p.two << endl;
+
+    // 	cout << pairNums.size() << endl;
+    // }
+    return isSolved;
+    
 }
 
 int main() {

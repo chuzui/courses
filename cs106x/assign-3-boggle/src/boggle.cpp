@@ -6,12 +6,14 @@
  
 #include <cctype>
 #include <iostream>
+#include <set>
 using namespace std;
 
 #include "simpio.h"
 #include "lexicon.h"
 #include "gwindow.h"
 #include "gboggle.h"
+#include "board.h"
 
 const int kBoggleWindowWidth = 650;
 const int kBoggleWindowHeight = 350;
@@ -64,13 +66,180 @@ static void giveInstructions() {
     getLine();
 }
 
+// static void shuffleVector(vector<)
+
+static void drawLetters(Board& board)
+{
+    int dim = board.get_dim();
+    for (int row = 0; row < dim; ++row)
+      for (int col = 0; col < dim; ++col)
+        labelCube(row, col, board.get_letter(row, col));
+}
+
+static inline bool containsWord(const set<string>& words, const string& word)
+{
+    return words.find(word) != words.end();
+}
+
+static bool isHavePath(Board& board, string& word, int index, int row, int col)
+{
+    if (word[index] != board.get_letter(row, col)) return false;
+    if (index == word.size() - 1) return true;
+    
+    int dim = board.get_dim();
+
+    for (int row_offset = -1; row_offset <= 1; ++row_offset)
+      for (int col_offset = -1; col_offset <= 1; ++col_offset)
+      {
+        if (row_offset != 0 || col_offset != 0)
+        {
+          int new_row = row + row_offset;
+          int new_col = col + col_offset;
+
+          if (new_row >= 0 && new_row < dim && 
+              new_col >= 0 && new_col < dim &&
+              !board.is_used(new_row, new_col))
+          {
+
+            board.set_used(new_row, new_col);
+            if (isHavePath(board, word, index + 1, new_row, new_col))
+              return true;
+            board.set_unused(new_row, new_col);
+          }
+        }
+      }
+
+    return false;
+}
+
+static bool isHavePath(Board& board, string& word)
+{
+    int dim = board.get_dim();
+    for (int row = 0; row < dim; ++row)
+      for (int col = 0; col < dim; ++col)
+      {
+        board.set_used(row, col);
+        if (isHavePath(board, word, 0, row, col))
+          return true;
+        board.set_unused(row, col);
+      }
+
+    return false;
+}
+
+static set<string> humanPlay(Board& board, Lexicon& english)
+{
+    set<string> humanWords;
+    string inputWord;
+    Player player = HUMAN;
+
+    board.reset_used();
+
+    while ((inputWord = getLine("Please input a valid word: ")).size() > 0)
+    {
+        if (english.contains(inputWord) && isHavePath(board, inputWord))
+        {
+          if (humanWords.find(inputWord) != humanWords.end())
+          {
+            cout << "This word has existed" << endl;
+          }
+          else
+          {
+            humanWords.insert(inputWord);
+            recordWordForPlayer(inputWord, player);
+          }
+        }
+        else
+        {
+          cout << "This word is invalid" << endl;
+        }
+    }
+    return humanWords;
+}
+
+static void findAllWords(Board& board,
+                         Lexicon& english,
+                         set<string>& allWords,
+                         string pre,
+                         int row, int col)
+{
+    pre += board.get_letter(row, col);
+
+    if (!english.containsPrefix(pre)) return;
+
+    if (pre.size() >= 4 && english.contains(pre) && !containsWord(allWords, pre))
+      allWords.insert(pre);
+
+    int dim = board.get_dim();
+
+    for (int row_offset = -1; row_offset <= 1; ++row_offset)
+      for (int col_offset = -1; col_offset <= 1; ++col_offset)
+      {
+        if (row_offset != 0 || col_offset != 0)
+        {
+          int new_row = row + row_offset;
+          int new_col = col + col_offset;
+
+          if (new_row >= 0 && new_row < dim && 
+              new_col >= 0 && new_col < dim &&
+              !board.is_used(new_row, new_col))
+          {
+
+            board.set_used(new_row, new_col);
+            findAllWords(board, english, allWords, pre, new_row, new_col);
+            board.set_unused(new_row, new_col);
+          }
+        }
+      }
+}
+
+static void findAllWords(Board& board, Lexicon& english, set<string>& allWords)
+{
+    int dim = board.get_dim();
+      for (int row = 0; row < dim; ++row)
+        for (int col = 0; col < dim; ++col)
+        {
+          board.set_used(row, col);
+          findAllWords(board, english, allWords, "", row, col);
+          board.set_unused(row, col);
+        }
+}
+
+static void computerPlay(Board& board, Lexicon& english, set<string> humanWords)
+{
+    board.reset_used();
+
+    set<string> computerWords;
+
+    findAllWords(board, english, computerWords);
+
+    Player player = COMPUTER;
+    for (string word : computerWords)
+    {
+        if (!containsWord(humanWords, word))
+          recordWordForPlayer(word, player);
+    }
+}
+
 int main() {
    GWindow gw(kBoggleWindowWidth, kBoggleWindowHeight);
    Lexicon english("dictionary.txt");
    initGBoggle(gw);
    welcome();
-   if (getYesOrNo("Do you need instructions?")) {
-      giveInstructions();
-   }
+   // if (getYesOrNo("Do you need instructions?")) {
+   //    giveInstructions();
+   // }
+
+   drawBoard(4, 4);
+
+   string letters = "eecaalephnboqtty";
+   Board board(4, letters);
+
+   drawLetters(board);
+
+   set<string> humanWords = humanPlay(board, english);
+
+   computerPlay(board, english, humanWords);
+
    return 0;
 }

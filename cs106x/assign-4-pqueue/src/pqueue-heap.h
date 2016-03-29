@@ -3,6 +3,7 @@
 
 #include "pqueue.h"
 #include <string>
+#include <vector>
 
 class HeapPQueue : public PQueue {
 public:
@@ -16,8 +17,10 @@ public:
     std::string peek() const;
     
 private:
-    // provide data methods and helper methods to
-    // help realize the binary heap-backed PQueue
+    std::vector<std::string> data;
+
+    void heapUp(int index);
+    void heapDown(int index);
 };
 
 #endif

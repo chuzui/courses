@@ -128,7 +128,7 @@ static const struct {
 	PQueue::PQueueType type;
     int reasonableTestSize;
 } testParameters[] = {
-    { PQueue::UnsortedVector, 10000},
+    // { PQueue::UnsortedVector, 10000},
     { PQueue::Heap, INT_MAX},
     { PQueue::LinkedList, 10000},
     { PQueue::BinomialHeap, INT_MAX}

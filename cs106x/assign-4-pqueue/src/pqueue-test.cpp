@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <climits>
 #include "pqueue.h"
 #include "lexicon.h"
 #include "map.h"

@@ -3,6 +3,7 @@
 
 #include "pqueue.h"
 #include <string>
+#include <vector>
 
 class VectorPQueue : public PQueue {
 public:
@@ -16,8 +17,9 @@ public:
     std::string peek() const;
 	
 private:
-	// provide data methods and helper methods to
-    // help realize the Vector-backed PQueue
+    std::vector<std::string> data;
+
+    int findMin() const;
 };
 
 #endif

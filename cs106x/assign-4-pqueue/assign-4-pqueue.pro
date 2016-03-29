@@ -146,7 +146,7 @@ CONFIG(release, debug|release) {
     }
     unix:!macx {
         QMAKE_POST_LINK += 'rm $${OUT_PWD}/*.o && rm $${OUT_PWD}/Makefile'
-        QMAKE_LFLAGS += -static
+        #QMAKE_LFLAGS += -static
         QMAKE_LFLAGS += -static-libgcc
         QMAKE_LFLAGS += -static-libstdc++
     }

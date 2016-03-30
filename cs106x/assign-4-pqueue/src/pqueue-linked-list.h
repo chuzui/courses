@@ -16,8 +16,15 @@ public:
     std::string peek() const;
 	
 private:
-	// provide data methods and helper methods to
-    // help realize the linked list-backed PQueue
+	struct Node
+	{
+		std::string item;
+		Node* prev;
+		Node* next;
+	};
+
+	Node* head;
+	void insert(Node* node);
 };
 
 #endif

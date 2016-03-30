@@ -16,14 +16,65 @@
 #include "sorted-string-set.h"
 using namespace std;
 
-SortedStringSet::SortedStringSet(const Vector<int (*)(const string&, int)>& hashers) {}
-SortedStringSet::~SortedStringSet() {}
+SortedStringSet::SortedStringSet(const Vector<int (*)(const string&, int)>& hashers) 
+	: hasherFuncs(hashers)
+{
+	filterLength = initLength;
+	filter = new bool[filterLength];
 
-bool SortedStringSet::contains(const string& value) const {
+	for (int i = 0; i < filterLength; i++)
+		filter[i] = false;
+
+	trueNum = 0;
+}
+
+SortedStringSet::~SortedStringSet() 
+{
+	delete[] filter;
+}
+
+bool SortedStringSet::contains(const string& value) const {	
+	for (auto& filterFunc : hasherFuncs)
+	{
+		int index = filterFunc(value, filterLength);
+		if (!filter[index])
+		{
+			return false;
+		}
+	}
+
 	return values.contains(value);
 }
 
 void SortedStringSet::add(const string& value) {
+	updateFilter(value);
 	values.add(value);
+
+	if (trueNum > (filterLength - trueNum))
+	{
+		filterLength *= hasherFuncs.size();
+		bool* newFilter = new bool[filterLength];
+
+		delete filter;
+		filter  = newFilter;
+
+		for (auto& value : values)
+		{
+			updateFilter(value);
+		}
+	}
+}
+
+void SortedStringSet::updateFilter(const std::string& value)
+{
+	for (auto& filterFunc : hasherFuncs)
+	{
+		int index = filterFunc(value, filterLength);
+		if (!filter[index])
+		{
+			filter[index] = true;
+			++trueNum;
+		}
+	}
 }
 

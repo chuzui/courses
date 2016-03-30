@@ -15,6 +15,7 @@
  */
 
 #include <string>
+#include <vector>
 #include "set.h"
 
 class SortedStringSet {
@@ -26,5 +27,14 @@ public:
 	void add(const std::string& value);
     
 private:
+	static const int initLength = 1001;
+
     Set<std::string> values;
+    Vector<int (*)(const std::string&, int)> hasherFuncs;
+    bool* filter;
+
+    int filterLength;
+    int trueNum;
+
+    void updateFilter(const std::string& value);
 };

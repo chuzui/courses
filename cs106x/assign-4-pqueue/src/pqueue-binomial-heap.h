@@ -3,6 +3,7 @@
 
 #include "pqueue.h"
 #include <string>
+#include <vector>
 
 class BinomialHeapPQueue : public PQueue {
 public:
@@ -16,8 +17,18 @@ public:
     std::string peek() const;
 	
 private:
-    // provide data methods and helper methods to
-    // help realize the binomial heap-backed PQueue
+    struct Node
+    {
+    	std::string elem;
+    	int degree;
+    	std::vector<Node*> children;
+    };
+
+    std::vector<Node*> data;
+
+    void insert(Node* node);
+    Node* addSubHeap(Node* p, Node* child);
+    Node* creatNode(const std::string& elem);
 };
 
 #endif

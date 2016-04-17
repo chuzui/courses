@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "pqueue.h"
 #include <map>
+#include "disjointset.h"
 
 // TODO: include any other headers you need; remove this comment
 using namespace std;
@@ -138,16 +139,93 @@ Vector<Vertex*> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end
 }
 
 Vector<Vertex*> aStar(BasicGraph& graph, Vertex* start, Vertex* end) {
-
+    graph.resetData();
+    PriorityQueue<Vertex*> pqueue;
     Vector<Vertex*> path;
+
+    pqueue.enqueue(start, 0 + heuristicFunction(start, end));
+    start->cost = 0.0;
+    start->setColor(YELLOW);
+
+    while(!pqueue.isEmpty())
+    {
+        Vertex* v = pqueue.dequeue();
+        v->setColor(GREEN);
+
+        if (v == end)
+            break;
+
+        for (auto edge : v->edges)
+        {
+            Vertex* next_v = edge->finish;
+            if (next_v->getColor() == 0)
+            {
+                next_v->setColor(YELLOW);
+                double next_cost = v->cost + edge->cost;
+                next_v->previous = v;
+                next_v->cost = next_cost;
+                pqueue.enqueue(next_v, next_cost + heuristicFunction(next_v, end));
+            }
+            else if (next_v->getColor() == YELLOW)
+            {
+                double next_cost = v->cost + edge->cost;
+                if (next_cost < next_v->cost)
+                {
+                    next_v->cost = next_cost;
+                    next_v->previous = v;
+                    pqueue.changePriority(next_v, next_v->cost + heuristicFunction(next_v, end));
+                }
+            }
+        }
+    }
+
+    if (end->getColor() == GREEN)
+    {
+        Vertex* path_v = end;
+        while (path_v->previous)
+        {
+            path.insert(0, path_v);
+            path_v = path_v->previous;
+        }
+        path.insert(0, path_v);
+    }
     return path;
 }
 
 Set<Edge*> kruskal(BasicGraph& graph) {
-    // TODO: implement this function; remove these comments
-    //       (The function body code provided below is just a stub that returns
-    //        an empty set so that the overall project will compile.
-    //        You should remove that code and replace it with your implementation.)
+    Set<Vertex*> vertexs = graph.getVertexSet();
+    Set<Edge*> edges = graph.getEdgeSet();
+    map<Vertex*, int> vet_index;
+    PriorityQueue<Edge*> pqueue;
+
+    for (Edge* edge : edges)
+        pqueue.enqueue(edge, edge->cost);
+
+    int N = vertexs.size();
+    DisjointSet union_set(N);
+
+    int i = 0;
+    for (Vertex* vert : vertexs)
+    {
+        vet_index[vert] = i;
+        ++i;
+    }
+
     Set<Edge*> mst;
+
+    while (union_set.count() > 1)
+    {
+        Edge* edge = pqueue.dequeue();
+        int p = vet_index[edge->start];
+        int q = vet_index[edge->finish];
+
+        if (!union_set.connected(p, q))
+        {
+            union_set.connect(p, q);
+            mst.add(edge);
+        }
+
+    }
+
     return mst;
 }

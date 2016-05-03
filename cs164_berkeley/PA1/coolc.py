@@ -25,7 +25,7 @@ opt = "-Djava.awt.headless=true"
 
 passes = ["Lexer", "Parser", "Semant", "Cgen"]
 mapper = lambda x: "java %s -cp \"%s\" %s %s" % (opt, classpath, x, arg_str)
-cmds = map(mapper, passes)
+cmds = list(map(mapper, passes))
 
 p1 = executePass(cmds[0], windows, None, PIPE)
 p2 = executePass(cmds[1], windows, p1.stdout, PIPE)

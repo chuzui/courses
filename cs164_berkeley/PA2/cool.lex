@@ -51,7 +51,7 @@ import java_cup.runtime.Symbol;
 
 /*  Code enclosed in %eofval{ %eofval} specifies java code that is
  *  executed when end-of-file is reached.  If you use multiple lexical
- *  states and want to do something special if an EOF is encountered in
+ *  states and want to do something scurr_linenopecial if an EOF is encountered in
  *  one of those states, place your code in the switch statement.
  *  Ultimately, you should return the EOF symbol, or your lexer won't
  *  work. */
@@ -61,6 +61,9 @@ import java_cup.runtime.Symbol;
 	/* nothing special to do in the initial state */
 	break;
 
+    case COMMENT:
+        yybegin(YYINITIAL);
+        return new Symbol(TokenConstants.ERROR, "EOF in comment");
 /* If necessary, add code for other states here, e.g:
     case LINE_COMMENT:
 	   ...
@@ -79,7 +82,8 @@ import java_cup.runtime.Symbol;
  * .
  * Hint: You might need additional start conditions. */
 %state LINE_COMMENT
-
+%state COMMENT
+%state STRING
 
 /* Define lexical rules after the %% separator.  There is some code
  * provided for you that you may wish to use, but you may change it
@@ -97,29 +101,42 @@ import java_cup.runtime.Symbol;
  * Reference Manual (CoolAid).  Please be sure to look there. */
 %%
 
-<YYINITIAL>\n	 { /* Fill-in here. */ }
-<YYINITIAL>\s+ { /* Fill-in here. */ }
+<YYINITIAL>\n	 { curr_lineno += 1; }
+<YYINITIAL>[^\S\n]+ { /* Fill-in here. */}
 
-<YYINITIAL>"--"         { /* Fill-in here. */ }
-<LINE_COMMENT>.*        { /* Fill-in here. */ }
-<LINE_COMMENT>\n        { /* Fill-in here. */ }
+<YYINITIAL>"--"         { yybegin(LINE_COMMENT);}
+<LINE_COMMENT>.+        { /* Fill-in here. */ }
+<LINE_COMMENT>\n        { curr_lineno += 1; yybegin(YYINITIAL); }
+
+<YYINITIAL>"(*"        { yybegin(COMMENT);}
+<COMMENT>"*)"         { yybegin(YYINITIAL);}
+<COMMENT>\n          { curr_lineno += 1;}
+<COMMENT>.          {}
 
 
 
+<YYINITIAL>\"           {string_buf.setLength(0); yybegin(STRING);}
+<STRING>\"              {yybegin(YYINITIAL);
+                         return new Symbol(TokenConstants.STR_CONST,
+                            AbstractTable.stringtable.addString(string_buf.toString()));}
 
+<STRING>[^\n\r\"\\]+                   { string_buf.append( yytext() ); }
+<STRING>\\t                            { string_buf.append('\t'); }
+<STRING>\\n                            { string_buf.append('\n'); }
+<STRING>\\b                            { string_buf.append('\b'); }
+<STRING>\\f                            { string_buf.append('\f'); }
+<STRING>\\r                            { string_buf.append('\r'); }
+<STRING>\\\"                           { string_buf.append('\"'); }
+<STRING>\\\n                           { string_buf.append('\n');
+                                         curr_lineno += 1;}
 
 <YYINITIAL>"=>"		{ return new Symbol(TokenConstants.DARROW); }
-
-
-
+<YYINITIAL>"<-"		{ return new Symbol(TokenConstants.ASSIGN); }
 
 
 <YYINITIAL>[0-9][0-9]*  { /* Integers */
                           return new Symbol(TokenConstants.INT_CONST,
 					    AbstractTable.inttable.addString(yytext())); }
-
-
-
 
 
 
@@ -143,7 +160,11 @@ import java_cup.runtime.Symbol;
 <YYINITIAL>t[Rr][Uu][Ee]	{ return new Symbol(TokenConstants.BOOL_CONST, Boolean.TRUE); }
 <YYINITIAL>[Ww][Hh][Ii][Ll][Ee] { return new Symbol(TokenConstants.WHILE); }
 
+<YYINITIAL>[a-z] [:jletterdigit:]*  {return new Symbol(TokenConstants.OBJECTID,
+AbstractTable.idtable.addString(yytext())); }
 
+<YYINITIAL>[A-Z] [:jletterdigit:]*  {return new Symbol(TokenConstants.TYPEID,
+AbstractTable.idtable.addString(yytext())); }
 
 
 
@@ -165,6 +186,7 @@ import java_cup.runtime.Symbol;
 <YYINITIAL>"}"			{ return new Symbol(TokenConstants.RBRACE); }
 <YYINITIAL>"{"			{ return new Symbol(TokenConstants.LBRACE); }
 
+<YYINITIAL>"error"      {}
 
 
 
@@ -172,4 +194,6 @@ import java_cup.runtime.Symbol;
                     *  This should be the very last rule and will match
                     *  everything not matched by other lexical rules.
                     */
-                   System.err.println("LEXER BUG - UNMATCHED: " + yytext()); }
+                   return new Symbol(TokenConstants.ERROR, yytext());
+                   //System.err.println("LEXER BUG - UNMATCHED: " + yytext());
+                   }

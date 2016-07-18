@@ -35,7 +35,7 @@ func doReduce(
 			}
 			_, ok := kvs[kv.Key]
 			if !ok {
-				kvs[kv.Key] = make([]string, 1000)
+				kvs[kv.Key] = make([]string, 0)
 			}
 			kvs[kv.Key] = append(kvs[kv.Key], kv.Value)
 		}

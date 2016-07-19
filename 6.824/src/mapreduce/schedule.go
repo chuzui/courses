@@ -30,14 +30,16 @@ func (mr *Master) schedule(phase jobPhase) {
 
 	for i:=0; i<ntasks; i++ {
 		go func(taskNum int, nios int, phase jobPhase) {
-			worker := <- mr.registerChannel
+
+			var args DoTaskArgs
+			args.JobName = mr.jobName
+			args.File = mr.files[taskNum]
+			args.Phase = phase
+			args.TaskNumber = taskNum
+			args.NumOtherPhase = nios
+
 			for {
-				var args DoTaskArgs
-				args.JobName = mr.jobName
-				args.File = mr.files[taskNum]
-				args.Phase = phase
-				args.TaskNumber = taskNum
-				args.NumOtherPhase = nios
+				worker := <- mr.registerChannel
 				ok := call(worker, "Worker.DoTask", &args, new(struct{}))
 				if ok {
 					go func() {

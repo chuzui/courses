@@ -17,6 +17,7 @@ func (mr *Master) schedule(phase jobPhase) {
 
 	fmt.Printf("Schedule: %v %v tasks (%d I/Os)\n", ntasks, phase, nios)
 
+	
 	// All ntasks tasks have to be scheduled on workers, and only once all of
 	// them have been completed successfully should the function return.
 	// Remember that workers may fail, and that any given worker may finish
@@ -24,5 +25,33 @@ func (mr *Master) schedule(phase jobPhase) {
 	//
 	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 	//
+
+	doneJobs := make(chan int)
+
+	for i:=0; i<ntasks; i++ {
+		go func(taskNum int, nios int, phase jobPhase) {
+			worker := <- mr.registerChannel
+			for {
+				var args DoTaskArgs
+				args.JobName = mr.jobName
+				args.File = mr.files[taskNum]
+				args.Phase = phase
+				args.TaskNumber = taskNum
+				args.NumOtherPhase = nios
+				ok := call(worker, "Worker.DoTask", &args, new(struct{}))
+				if ok {
+					go func() {
+						mr.registerChannel <- worker
+					}()
+					break
+				}
+			}
+			doneJobs <- 1
+		}(i, nios, phase)
+	}
+
+	for i := 0; i<ntasks; i++ {
+		<- doneJobs
+	}
 	fmt.Printf("Schedule: %v phase done\n", phase)
 }

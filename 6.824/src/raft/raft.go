@@ -18,11 +18,20 @@ package raft
 //
 
 import "sync"
-import "labrpc"
+import (
+	"labrpc"
+	"time"
+	"math/rand"
+)
 
 // import "bytes"
 // import "encoding/gob"
 
+const (
+	LEADER = iota
+	CANDIDATE
+	FOLLOWER
+)
 
 
 //
@@ -46,6 +55,9 @@ type Raft struct {
 	persister *Persister
 	me        int // index into peers[]
 
+	currentTerm int
+	votedFor 	int
+	state int
 	// Your data here.
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
@@ -98,6 +110,10 @@ func (rf *Raft) readPersist(data []byte) {
 //
 type RequestVoteArgs struct {
 	// Your data here.
+	Term int
+	CandidateID int
+	LastLogIndex int
+	LastLogTerm  int
 }
 
 //
@@ -105,6 +121,8 @@ type RequestVoteArgs struct {
 //
 type RequestVoteReply struct {
 	// Your data here.
+	Term int
+	VoteGranted bool
 }
 
 //
@@ -136,7 +154,21 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 	return ok
 }
 
+func (rf *Raft) startVote() {
+	rf.currentTerm += 1
 
+	var args RequestVoteArgs
+	args.Term = rf.currentTerm
+	args.CandidateID = rf.me
+
+	for i, _ := range rf.peers {
+		var reply RequestVoteReply
+
+		go func() {
+			rf.sendRequestVote(i, args, reply)
+		}()
+	}
+}
 //
 // the service using Raft (e.g. a k/v server) wants to start
 // agreement on the next command to be appended to Raft's log. if this
@@ -169,6 +201,10 @@ func (rf *Raft) Kill() {
 	// Your code here, if desired.
 }
 
+func timeOut () <- chan time.Time {
+	return time.After(time.Duration(rand.Int63() % 333 + 550) * time.Millisecond)
+}
+
 //
 // the service or tester wants to create a Raft server. the ports
 // of all the Raft servers (including this one) are in peers[]. this
@@ -188,6 +224,25 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here.
+	rf.votedFor = -1
+	rf.currentTerm = -1
+	rf.state = FOLLOWER
+
+	go func() {
+		for {
+			switch rf.state {
+			case FOLLOWER:
+				select {
+					case <- timeOut():
+							rf.state = CANDIDATE
+					}
+			case CANDIDATE:
+				select {
+
+					}
+			}
+		}
+	}()
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
